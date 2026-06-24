@@ -1,33 +1,7 @@
-from langchain_core.messages import HumanMessage, ToolMessage
-
-from agent_graph import agent_graph
-from agent_history import save_agent_history
+from agent_service import run_agent
 
 
 
-
-def get_source_chunk_ids(messages):
-    source_chunk_ids = []
-
-    for message in messages:
-        if not isinstance(message, ToolMessage):
-            continue
-
-        lines = str(message.content).splitlines()
-
-        for line in lines:
-            if not line.startswith("[chunk "):
-                continue
-
-            if not line.endswith("]"):
-                continue
-
-            chunk_id = line[len("[chunk "):-1]
-
-            if chunk_id.isdigit() and chunk_id not in source_chunk_ids:
-                source_chunk_ids.append(chunk_id)
-
-    return source_chunk_ids
 
 
 
@@ -49,33 +23,20 @@ def main():
             print("结束")
             break
 
-        state = {
-            "question":question,
-            "messages":[
-                HumanMessage(content=question)
-            ],
-            "answer":"",
-            "step_count":0
-        }
-
-        result = agent_graph.invoke(state)
-
+        response = run_agent(question)
 
 
         print("最终回答：")
-        print(result["answer"])
+        print(response["answer"])
 
-        source_chunk_ids = get_source_chunk_ids(result["messages"])
-
-        if source_chunk_ids:
+        if response["sources"]:
             sources = []
 
-            for chunk_id in source_chunk_ids:
+            for chunk_id in response["sources"]:
                 sources.append("chunk " + chunk_id)
 
             print("参考来源：", "、".join(sources))
 
-        save_agent_history(result)
 
         print("-" * 30)
 

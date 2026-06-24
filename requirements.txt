@@ -1,4 +1,6 @@
 requests
+fastapi
+uvicorn
 langgraph
 langchain-core
 typing-extensions

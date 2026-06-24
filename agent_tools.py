@@ -5,6 +5,8 @@ from langchain_core.tools import tool
 from rag_files import load_knowledge
 from vector_index import get_or_build_vector_index, vector_search
 
+from agent_errors import AgentServiceUnavailableError
+
 @tool
 def search_knowledge(query: str) -> str:
     """回答知识性问题前必须调用，用于检索个人知识库中的相关资料。"""
@@ -36,6 +38,6 @@ def search_knowledge(query: str) -> str:
         return "\n\n".join(result_texts)
 
     except requests.RequestException as error:
-        print("知识库检索失败：", error)
-
-        return "检索工具暂时不可用，无法连接 Embedding 服务，请稍后再试。"
+        raise AgentServiceUnavailableError(
+            "Embedding 检索服务暂时不可用"
+        )from error

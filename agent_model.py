@@ -10,6 +10,8 @@ from langchain_core.messages import(
     ToolMessage
 )
 
+from agent_errors import AgentServiceUnavailableError
+
 
 from agent_config import MAX_STEPS
 from agent_state import AgentState
@@ -181,11 +183,7 @@ def model_node(state:AgentState):
             "step_count":state["step_count"]+1
         }
 
-    except (requests.RequestException, ValueError) as error:
-        answer = "模型请求失败：" + str(error)
-
-        return {
-            "messages": [AIMessage(content=answer)],
-            "answer": answer,
-            "step_count": state["step_count"] + 1
-        }
+    except requests.RequestException as error:
+        raise AgentServiceUnavailableError(
+            "Qwen 模型服务暂时不可用"
+    ) from error

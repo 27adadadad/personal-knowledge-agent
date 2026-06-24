@@ -1,0 +1,2 @@
+class AgentServiceUnavailableError(Exception):
+    pass

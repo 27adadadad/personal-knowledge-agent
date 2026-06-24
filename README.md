@@ -32,18 +32,20 @@
 ```text
 personal_knowledge_agent/
 ├── main.py                # 命令行入口与结果展示
-├── agent_graph.py         # LangGraph 工作流
-├── agent_model.py         # 模型调用与消息格式转换
-├── agent_tools.py         # search_knowledge 工具
-├── agent_state.py         # Agent 状态定义
-├── vector_index.py        # 向量索引、缓存与检索
-├── embedding_client.py    # Embedding API 调用
-├── qwen_client.py         # Qwen API 调用
-├── rag_files.py           # 知识库读取与文本切分
-├── agent_history.py       # Agent 历史记录保存
-├── knowledge.txt          # 本地知识库
-├── requirements.txt       # Python 依赖
-└── .env.example           # 环境变量示例
+├── api.py                 # FastAPI 接口
+├── agent_service.py        # Agent 服务层
+├── agent_graph.py          # LangGraph 工作流
+├── agent_model.py          # 模型调用与消息格式转换
+├── agent_tools.py          # search_knowledge 工具
+├── agent_state.py          # Agent 状态定义
+├── vector_index.py         # 向量索引、缓存与检索
+├── embedding_client.py     # Embedding API 调用
+├── qwen_client.py          # Qwen API 调用
+├── rag_files.py            # 知识库读取与文本切分
+├── agent_history.py        # Agent 历史记录保存
+├── knowledge.txt           # 本地知识库
+├── requirements.txt        # Python 依赖
+└── .env.example            # 环境变量示例
 ```
 
 ## 环境要求
@@ -78,6 +80,66 @@ $env:DASHSCOPE_API_KEY="你的_API_Key"
 - 哈希值不同：自动重新生成向量索引
 - 索引文件缺失或格式不符合要求：重新构建索引
 
+## API 使用
+
+启动 FastAPI 服务：
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn api:app --reload
+```
+
+启动后可访问接口文档：
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+### 健康检查
+
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/health"
+```
+
+预期响应：
+
+```json
+{
+  "status": "ok"
+}
+```
+
+### 提问
+
+```python
+import requests
+
+response = requests.post(
+    "http://127.0.0.1:8000/chat",
+    json={"question": "什么是 RAG？"},
+    timeout=120
+)
+
+print(response.status_code)
+print(response.json())
+```
+
+成功响应格式：
+
+```json
+{
+  "answer": "RAG 是检索增强生成……",
+  "sources": [2],
+  "step_count": 2
+}
+```
+
+### 常见状态码
+
+- `200`：请求成功，返回 Agent 回答。
+- `422`：请求参数不合法，例如 `question` 为空或超过 500 个字符。
+- `503`：Qwen 或 Embedding 等外部服务暂时不可用，可稍后重试。
+- `500`：未预期的服务端错误，需要查看服务日志排查。
+
 ## 关键设计
 
 ### 向量检索
@@ -86,9 +148,28 @@ $env:DASHSCOPE_API_KEY="你的_API_Key"
 
 检索结果按分数从高到低排序，只保留满足最低相似度阈值的结果，避免无关资料进入模型上下文。
 
+### 向量索引缓存
+
+向量索引保存在 `vector_index.json` 中，避免每次提问都重新请求 Embedding API。
+
+索引文件同时保存知识库内容的 MD5 哈希值：
+
+- 哈希值一致：直接加载已有索引
+- 哈希值不同：知识库已变化，重新构建索引
+- 索引文件缺失或格式不符合要求：重新构建索引
+
 ### Agent 工具调用
 
 `search_knowledge` 是 Agent 可调用的工具。它负责加载知识库、获取向量索引、执行向量检索，并将相关资料作为 `ToolMessage` 返回给模型。
+
+Agent 使用 LangGraph 管理执行流程：
+
+```text
+HumanMessage
+  -> AIMessage（请求调用 search_knowledge）
+  -> ToolMessage（工具返回检索资料）
+  -> AIMessage（基于资料生成最终回答）
+```
 
 ### 来源展示
 
