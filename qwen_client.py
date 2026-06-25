@@ -1,10 +1,6 @@
 import requests
 
-from agent_config import (
-    QWEN_API_URL,
-    QWEN_MODEL_NAME,
-    QWEN_REQUEST_TIMEOUT
-)
+from settings import settings
 
 
 def ask_qwen(messages, api_key):
@@ -14,17 +10,17 @@ def ask_qwen(messages, api_key):
     }
 
     data = {
-        "model":QWEN_MODEL_NAME,
+        "model":settings.chat_model_name,
         "messages":messages,
         "temperature":0.2,
-        "max_token":200
+        "max_tokens":200
     }
 
     response = requests.post(
-        QWEN_API_URL,
-        headers= headers,
+        settings.chat_api_url,
+        headers=headers,
         json=data,
-        timeout=QWEN_REQUEST_TIMEOUT
+        timeout=settings.chat_request_timeout
     )
 
     response.raise_for_status()
@@ -44,7 +40,7 @@ def ask_qwen_with_tools(messages, tools, api_key):
     }
 
     data = {
-        "model":QWEN_MODEL_NAME,
+        "model":settings.chat_model_name,
         "messages":messages,
         "tools":tools,
         "tool_choice":"auto",
@@ -53,10 +49,10 @@ def ask_qwen_with_tools(messages, tools, api_key):
     }
 
     response = requests.post(
-        QWEN_API_URL,
+        settings.chat_api_url,
         headers= headers,
         json=data,
-        timeout = QWEN_REQUEST_TIMEOUT
+        timeout = settings.chat_request_timeout
     )
 
     response.raise_for_status()

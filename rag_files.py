@@ -1,6 +1,5 @@
-import os
-
 from pathlib import Path
+from settings import settings
 
 from agent_config import KNOWLEDGE_FILE
 
@@ -12,7 +11,7 @@ def get_file_path(filename):
 
 
 def get_data_file_path(filename):
-    data_dir_text = os.getenv("DATA_DIR")
+    data_dir_text = settings.data_dir
 
     if data_dir_text:
         return Path(data_dir_text) / filename

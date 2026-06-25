@@ -64,13 +64,53 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
-## 配置 API Key
+## 配置环境变量
 
-仅在当前 PowerShell 窗口中设置：
+项目使用 `settings.py` 集中读取环境变量。本地开发时可以只设置必需项，其他配置会使用默认值。
+
+仅在当前 PowerShell 窗口中设置 API Key：
 
 ```powershell
 $env:DASHSCOPE_API_KEY="你的_API_Key"
 ```
+
+如果需要调整运行数据目录、模型、超时时间或检索参数，可以参考 `.env.example`：
+
+```env
+DATA_DIR=/data
+DASHSCOPE_API_KEY=your_api_key_here
+
+CHAT_API_URL=https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions
+CHAT_MODEL_NAME=qwen-plus
+CHAT_REQUEST_TIMEOUT=60
+
+EMBEDDING_API_URL=https://dashscope.aliyuncs.com/compatible-mode/v1/embeddings
+EMBEDDING_MODEL_NAME=text-embedding-v4
+EMBEDDING_REQUEST_TIMEOUT=60
+
+VECTOR_SEARCH_TOP_K=3
+MIN_SIMILARITY_SCORE=0.3
+
+MAX_RETRIES=3
+RETRY_SLEEP_SECONDS=2
+```
+
+配置说明：
+
+| 环境变量 | 作用 |
+| --- | --- |
+| `DATA_DIR` | 运行数据目录。Docker 中建议设为 `/data`，本地不设置时默认使用项目目录。 |
+| `DASHSCOPE_API_KEY` | DashScope API Key，必须由运行环境提供，不要写入代码。 |
+| `CHAT_API_URL` | Qwen 对话接口地址。 |
+| `CHAT_MODEL_NAME` | Qwen 对话模型名称。 |
+| `CHAT_REQUEST_TIMEOUT` | Qwen 请求超时时间，单位为秒。 |
+| `EMBEDDING_API_URL` | Embedding 接口地址。 |
+| `EMBEDDING_MODEL_NAME` | Embedding 模型名称。 |
+| `EMBEDDING_REQUEST_TIMEOUT` | Embedding 请求超时时间，单位为秒。 |
+| `VECTOR_SEARCH_TOP_K` | 向量检索最多返回的 chunk 数量。 |
+| `MIN_SIMILARITY_SCORE` | 最低相似度阈值，低于该值的 chunk 不进入模型上下文。 |
+| `MAX_RETRIES` | 外部 API 请求失败后的最大重试次数。 |
+| `RETRY_SLEEP_SECONDS` | 每次重试前等待的秒数。 |
 
 ## 更新知识库
 

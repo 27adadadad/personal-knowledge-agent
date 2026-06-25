@@ -4,7 +4,8 @@ import hashlib
 
 from rag_files import get_data_file_path
 from embedding_client import embed_text, embed_texts
-from agent_config import VECTOR_INDEX_FILE, VECTOR_SEARCH_TOP_K, MIN_SIMILARITY_SCORE
+from agent_config import VECTOR_INDEX_FILE
+from settings import settings
 
 
 
@@ -146,9 +147,9 @@ def vector_search(question, vector_index):
     filtered_results= []
 
     for result in results:
-        if result["score"]<MIN_SIMILARITY_SCORE:
+        if result["score"]<settings.min_similarity_score:
             continue
 
         filtered_results.append(result)
 
-    return filtered_results[:VECTOR_SEARCH_TOP_K]
+    return filtered_results[:settings.vector_search_top_k]
