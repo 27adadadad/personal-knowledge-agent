@@ -1,12 +1,12 @@
 import json
 from datetime import datetime
 
-from rag_files import get_file_path
+from rag_files import get_data_file_path
 from agent_config import RAG_HISTORY_FILE
 
 
 def load_rag_history():
-    file_path = get_file_path(RAG_HISTORY_FILE)
+    file_path = get_data_file_path(RAG_HISTORY_FILE)
 
     if not file_path.exists():
         return []
@@ -27,7 +27,7 @@ def load_rag_history():
 
 
 def save_rag_history(question, results, answer, usage):
-    file_path = get_file_path(RAG_HISTORY_FILE)
+    file_path = get_data_file_path(RAG_HISTORY_FILE)
 
     history = load_rag_history()
 

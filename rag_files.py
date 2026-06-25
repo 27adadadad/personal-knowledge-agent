@@ -1,11 +1,23 @@
+import os
+
 from pathlib import Path
 
 from agent_config import KNOWLEDGE_FILE
 
 
+
 def get_file_path(filename):
     current_dir= Path(__file__).parent
     return current_dir / filename
+
+
+def get_data_file_path(filename):
+    data_dir_text = os.getenv("DATA_DIR")
+
+    if data_dir_text:
+        return Path(data_dir_text) / filename
+
+    return get_file_path(filename)
 
 
 def load_knowledge_text():

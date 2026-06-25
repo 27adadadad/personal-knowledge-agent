@@ -2,7 +2,7 @@ import json
 import math
 import hashlib
 
-from rag_files import get_file_path
+from rag_files import get_data_file_path
 from embedding_client import embed_text, embed_texts
 from agent_config import VECTOR_INDEX_FILE, VECTOR_SEARCH_TOP_K, MIN_SIMILARITY_SCORE
 
@@ -68,7 +68,7 @@ def build_vector_index(chunks):
     return vector_index
 
 def save_vector_index(vector_index, knowledge_hash):
-    file_path = get_file_path(VECTOR_INDEX_FILE)
+    file_path = get_data_file_path(VECTOR_INDEX_FILE)
 
     index_data = {
         "knowledge_hash":knowledge_hash,
@@ -82,7 +82,7 @@ def save_vector_index(vector_index, knowledge_hash):
 
 
 def load_vector_index():
-    file_path = get_file_path(VECTOR_INDEX_FILE)
+    file_path = get_data_file_path(VECTOR_INDEX_FILE)
 
     if not file_path.exists():
         return None

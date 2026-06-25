@@ -140,6 +140,103 @@ print(response.json())
 - `503`：Qwen 或 Embedding 等外部服务暂时不可用，可稍后重试。
 - `500`：未预期的服务端错误，需要查看服务日志排查。
 
+## Docker 运行
+
+### 构建镜像
+
+在 `personal_knowledge_agent` 目录中执行：
+
+```powershell
+docker build -t personal-knowledge-agent:latest .
+```
+
+### 设置 API Key
+
+仅在当前 PowerShell 窗口中设置：
+
+```powershell
+$env:DASHSCOPE_API_KEY="你的_API_Key"
+```
+
+### 启动容器
+
+```powershell
+docker run `
+  --name personal-knowledge-agent-api `
+  -p 8000:8000 `
+  -e DATA_DIR=/data `
+  -e DASHSCOPE_API_KEY=$env:DASHSCOPE_API_KEY `
+  -v agent-data:/data `
+  personal-knowledge-agent:latest
+```
+
+参数说明：
+
+- `-p 8000:8000`：将容器内的 `8000` 端口映射到宿主机本地 `8000` 端口。
+- `-e DATA_DIR=/data`：让运行数据写入容器内 `/data` 目录。
+- `-e DASHSCOPE_API_KEY=$env:DASHSCOPE_API_KEY`：将宿主机 PowerShell 中的 API Key 传入容器。
+- `-v agent-data:/data`：将 Docker 命名卷 `agent-data` 挂载到容器内 `/data`，用于保存运行数据。
+
+### 检查服务
+
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/health"
+```
+
+预期响应：
+
+```json
+{
+  "status": "ok"
+}
+```
+
+### 调用问答接口
+
+建议使用 Python `requests` 验证响应，避免 PowerShell 中文显示乱码影响判断：
+
+```powershell
+..\.venv\Scripts\python.exe -c "import requests; r=requests.post('http://127.0.0.1:8000/chat', json={'question':'什么是 RAG？'}, timeout=120); print('状态码：', r.status_code); print(r.content.decode('utf-8'))"
+```
+
+预期响应示例：
+
+```json
+{
+  "answer": "RAG 是检索增强生成，它会先查找资料，再让大模型基于资料回答。",
+  "sources": [2],
+  "step_count": 2
+}
+```
+
+### 数据持久化
+
+容器内目录分工：
+
+```text
+/app  ：项目代码和 knowledge.txt
+/data ：运行数据
+```
+
+`knowledge.txt` 属于镜像内的固定知识库文件。向量索引和历史记录属于运行数据，会写入 `DATA_DIR` 指向的目录。
+
+当前 Docker 命令中：
+
+```text
+DATA_DIR=/data
+agent-data:/data
+```
+
+表示以下文件会保存在 Docker 命名卷 `agent-data` 中：
+
+```text
+vector_index.json
+agent_history.json
+rag_history.json
+```
+
+只删除容器不会删除 `agent-data` 卷；只要继续挂载同一个卷，运行数据可以继续复用。
+
 ## 关键设计
 
 ### 向量检索
@@ -157,6 +254,17 @@ print(response.json())
 - 哈希值一致：直接加载已有索引
 - 哈希值不同：知识库已变化，重新构建索引
 - 索引文件缺失或格式不符合要求：重新构建索引
+
+### 运行数据目录
+
+项目通过 `DATA_DIR` 区分固定知识库和运行数据：
+
+- `knowledge.txt`：固定知识库文件，随镜像一起打包，仍从项目代码目录读取。
+- `vector_index.json`：向量索引缓存，属于运行数据。
+- `agent_history.json`：Agent 运行历史，属于运行数据。
+- `rag_history.json`：RAG 历史记录，属于运行数据。
+
+本地开发时如果未设置 `DATA_DIR`，运行数据默认保存在项目目录中。Docker 运行时建议设置 `DATA_DIR=/data`，并挂载 Docker 命名卷保存运行数据。
 
 ### Agent 工具调用
 

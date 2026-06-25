@@ -4,10 +4,10 @@ from datetime import datetime
 from langchain_core.messages import ToolMessage
 
 from agent_config import HISTORY_FILE
-from rag_files import get_file_path
+from rag_files import get_data_file_path
 
 def load_agent_history():
-    file_path = get_file_path(HISTORY_FILE)
+    file_path = get_data_file_path(HISTORY_FILE)
 
     if not file_path.exists():
         return []
@@ -53,7 +53,7 @@ def save_agent_history(result):
 
     history.append(record)
 
-    file_path = get_file_path(HISTORY_FILE)
+    file_path = get_data_file_path(HISTORY_FILE)
 
     with open(file_path, "w", encoding="utf-8") as file:
         json.dump(history, file, ensure_ascii= False, indent = 2)
