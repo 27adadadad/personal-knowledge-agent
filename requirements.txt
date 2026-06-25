@@ -4,3 +4,4 @@ uvicorn
 langgraph
 langchain-core
 typing-extensions
+pydantic-settings
